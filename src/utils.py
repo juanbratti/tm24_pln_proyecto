@@ -150,7 +150,7 @@ def tokenize_reviews_to_sequences(reviews, sequence_length):
         sequence_length (int): The length of each sequence.
 
     Returns:
-        pd.DataFrame: A DataFrame with sequences of tokens.
+        List of str
     """
     sequences = []
     
@@ -158,7 +158,7 @@ def tokenize_reviews_to_sequences(reviews, sequence_length):
         doc = nlp(review)
         tokens = [token.text for token in doc if not token.is_punct and not token.is_space]
         for i in range(0, len(tokens) - sequence_length + 1):
-            sequence = tokens[i:i + sequence_length]
+            sequence = ' '.join(tokens[i:i + sequence_length])
             sequences.append(sequence)
     
     return sequences
