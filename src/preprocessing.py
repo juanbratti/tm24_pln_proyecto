@@ -25,16 +25,13 @@ else:
 df_processed = lemmatisation_stopwords_series(reviews)
 
 # tokenization in sequences of 5 words
-# sequences = tokenize_reviews_to_sequences(reviews,5)
-
-# series to list of strings
-reviews_list = df_processed.to_list()
+sequences_list = tokenize_reviews_to_sequences(df_processed,5)
 
 # vectorization
 from sklearn.feature_extraction.text import CountVectorizer
 
 vectorizer = CountVectorizer()
-dtm = vectorizer.fit_transform(reviews_list)
+dtm = vectorizer.fit_transform(sequences_list)
 
 from sklearn.decomposition import LatentDirichletAllocation
 
@@ -48,7 +45,7 @@ print("Product Title")
 print(dataset[dataset['productId'] == product_id]['productTitle'].iloc[0])
 
 # Print the topics found by the LDA model
-print("Topics found via LDA:")
+print("Topics found via LDA (in training):")
 for i, topic in enumerate(lda_model.components_):
     print(f"Topic {i}:")
     print([vectorizer.get_feature_names_out()[i] for i in topic.argsort()[-10:]])
