@@ -98,6 +98,24 @@ def get_product_with_max_reviews(input_file):
 
     return product_id, max_reviews
 
+def get_product_with_n_reviews(input_file,n):
+    
+        """
+        From a parsed csv file, returns the productId that has n reviews.
+        
+        Args:
+            input_file (str): The path to the input text file.
+    
+        Returns: 
+            product_id (str): The productId with the most reviews.
+        """
+    
+        reviews_per_product = get_reviews_per_product(input_file)
+        # get the reviews of the product that has n reviews
+        product_id = reviews_per_product[reviews_per_product == n].index[0]
+
+        return product_id
+    
 
 def detect_emojis(text):
     """
@@ -143,7 +161,34 @@ def tokenize_reviews_to_sequences(reviews, sequence_length):
             sequence = tokens[i:i + sequence_length]
             sequences.append(sequence)
     
-    return pd.DataFrame(sequences, columns=[f'word_{i+1}' for i in range(sequence_length)])
+    return sequences
+
+def lemmatisation_stopwords_text(text):
+    """
+    Lemmatizes a text and eliminates its stopwords.
+    
+    Args:
+        text (str)
+
+    Returns:
+        str:
+    """
+    doc = nlp(text)
+    processed_text = ' '.join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct and not token.is_space])
+    return processed_text
+
+def lemmatisation_stopwords_series(df):
+    """
+    Lemmatizes a Series and eliminates the stopwords identified in each row.
+    
+    Args:
+        df (pd.Series)
+
+    Returns:
+        pd.Series
+    """
+    df = df.apply(lemmatisation_stopwords_text)
+    return df
 
 # --------------------------------------------- 
 
