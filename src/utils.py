@@ -117,6 +117,28 @@ def get_product_with_n_reviews(input_file,n):
         return product_id
     
 
+def get_products_with_reviews_in_range(input_file, n, x, y):
+    """
+    From a parsed CSV file, returns a list of productIds that have between x and y reviews.
+
+    Args:
+        input_file (str): The path to the input CSV file.
+        n (int): The number of productIds to return.
+        x (int): Minimum number of reviews a product must have.
+        y (int): Maximum number of reviews a product must have.
+
+    Returns:
+        product_ids (list): A list of productIds with between x and y reviews, up to n products.
+    """
+    
+    reviews_per_product = get_reviews_per_product(input_file)
+    
+    filtered_products = reviews_per_product[(reviews_per_product >= x) & (reviews_per_product <= y)]
+    
+    product_ids = filtered_products.index[:n].tolist()
+    
+    return product_ids
+
 def detect_emojis(text):
     """
     Detects emojis in a string.
@@ -192,3 +214,16 @@ def lemmatisation_stopwords_series(df):
 
 # --------------------------------------------- 
 
+def get_reviews_from_top_x_products(file_path, x):
+    dataset = pd.read_csv(file_path)
+    
+    # Contar las reseñas por producto
+    product_counts = dataset['productId'].value_counts()
+    
+    # Obtener los primeros x productos con más reseñas
+    top_products = product_counts.head(x).index.tolist()
+    
+    # Filtrar las reseñas para estos productos y combinarlas
+    combined_reviews = dataset[dataset['productId'].isin(top_products)]['reviewText']
+    
+    return combined_reviews
