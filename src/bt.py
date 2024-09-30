@@ -2,7 +2,7 @@ import pandas as pd
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
 from utils import *
-from kmeans_test import preprocess, split_by_punctuation
+from kmeans_test import preprocess, split_by_punctuation, create_ngrams
 
 
 onlyadj = False # si se quiere solo los adjetivos de las reviews
