@@ -3,6 +3,14 @@ from utils import detect_emojis, filter_nouns_spacy, get_product_with_max_review
 import nltk
 import spacy
 
+# Add the GuidedLDA directory to the Python path
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'GuidedLDA')))
+
+import guidedlda
+import numpy as np
+
 # get filepath to parsed file
 processed_file_path = '../data/parsed_input_file.csv'
 
@@ -57,53 +65,57 @@ from sklearn.feature_extraction.text import CountVectorizer
 vectorizer = CountVectorizer()
 dtm = vectorizer.fit_transform(sequences_list)
 
+vocab = vectorizer.get_feature_names_out()
+
 from sklearn.decomposition import LatentDirichletAllocation
 
-# Apply LDA
-num_topics=4
-lda_model = LatentDirichletAllocation(n_components=num_topics, random_state=0)
-lda_model.fit(dtm)
-
-# Title of the product
-print("Product Title")
-print(dataset[dataset['productId'] == product_id]['productTitle'].iloc[0])
-
-# Print the topics found by the LDA model
-print("Topics found via LDA (in training):")
-for i, topic in enumerate(lda_model.components_):
-    print(f"Topic {i}:")
-    print([vectorizer.get_feature_names_out()[i] for i in topic.argsort()[-10:]])
-    print("\n")
-
-# get the topic probability distribution for each review
-with_docs = lda_model.transform(dtm)
-
-# dataframe with the topic probability distribution for each review
-topics_df = pd.DataFrame(with_docs, columns=[f"Topic {i}" for i in range(num_topics)])
-print(topics_df)
-
-################################################################################################
-
-
-
 # Define general themes and their keywords
-general_topics = {
+seed_topics = {
     "Price": ["cheap", "expensive", "price", "value", "affordable", "cost-effective", "budget-friendly", "inexpensive", "pricy", "overpriced", "costly"],
     "Quality": ["good", "bad", "quality", "durable", "high-quality", "low-quality", "well-made", "fragile", "sturdy", "weak", "reliable", "unreliable"],
     "Use": ["easy", "difficult", "use", "works", "intuitive", "counterintuitive", "straightfoward", "complicated", "efficient", "inefficient", "unreliable"],
     "Design": ["nice", "ugly", "design", "aesthetic", "stylish", "unstylish", "atractive", "modern", "outdated", "elegant", "tastefull", "tasteless"],
 }
 
-with_docs = lda_model.transform(dtm)  
+seed_word_ids = {}
+for topic_id, words in seed_topics.items():
+    seed_word_ids[topic_id] = [vocab.tolist().index(word) for word in words if word in vocab]
 
-lda_topics = [[vectorizer.get_feature_names_out()[i] for i in topic.argsort()[-10:]] for topic in lda_model.components_]
-mapped_topics = map_lda_to_general_topic(lda_topics, general_topics)
-print(mapped_topics)
+model = guidedlda.GuidedLDA(
+    n_topics=4,
+    n_iter=100,
+    random_state=0,
+    refresh=20
+)
 
+# adjust guidedLDA with seed words
+model.fit(
+    dtm,
+    seed_topics=seed_word_ids,
+    seed_confidence=0.15  
+)
+
+# get topic's distributions
+topic_word = model.topic_word_
+
+# get the top words for each topic
+n_top_words = 10
+for i, topic_dist in enumerate(topic_word):
+    topic_words = np.array(vocab)[np.argsort(topic_dist)][:-(n_top_words+1):-1]
+    print('Topic {}: {}'.format(i, ' '.join(topic_words)))
+
+# get the most probable topic for each review
+with_docs = model.transform(dtm)
+
+# create a dataframe with the topics for each document
+topics_df = pd.DataFrame(with_docs, columns=[f"Tópico {i}" for i in range(4)])  # Change 4 to 5
+
+# get the most probable topic for each document
+topics_df['topic'] = topics_df.idxmax(axis=1)
+
+
+# print sequence and the most probable topic
 for i in range(len(sequences_list)):
-    print(f"Sequence {i + 1}: {sequences_list[i]}")
-    
-    topic_probability = with_docs[i]
-    assigned_topic = topic_probability.argmax()
-    
-    print(f"-- Assigned Topic: {assigned_topic} ({mapped_topics[f'Topic {assigned_topic}']})")
+    print(f"Sequence: {reviews_sentences[i]}")
+    print(f"Most probable topic: {topics_df['topic'][i]}")
+    print()
