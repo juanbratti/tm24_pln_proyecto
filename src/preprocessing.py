@@ -106,7 +106,8 @@ model.fit(
 topic_word = model.topic_word_
 
 # get the top words for each topic
-n_top_words = 10
+print("Topics found by GuidedLDA (in training)")
+n_top_words = 15
 for i, topic_dist in enumerate(topic_word):
     topic_words = np.array(vocab)[np.argsort(topic_dist)][:-(n_top_words+1):-1]
     print('Topic {}: {}'.format(i, ' '.join(topic_words)))
@@ -120,9 +121,16 @@ topics_df = pd.DataFrame(with_docs, columns=[f"Tópico {i}" for i in range(4)]) 
 # get the most probable topic for each document
 topics_df['topic'] = topics_df.idxmax(axis=1)
 
+# LDA STANDAR:
 
-# print sequence and the most probable topic
-for i in range(len(sequences_list)):
-    print(f"Sequence: {reviews_sentences[i]}")
-    print(f"Most probable topic: {topics_df['topic'][i]}")
-    print()
+# Apply LDA
+num_topics=4
+lda_model = LatentDirichletAllocation(n_components=num_topics, random_state=0)
+lda_model.fit(dtm)
+
+print("Topics found via STANDAR LDA (in training):")
+for i, topic in enumerate(lda_model.components_):
+    print(f"Topic {i}:")
+    print([vectorizer.get_feature_names_out()[i] for i in topic.argsort()[-10:]])
+    print("\n")
+
