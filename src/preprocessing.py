@@ -18,7 +18,7 @@ processed_file_path = '../data/parsed_input_file.csv'
 dataset = pd.read_csv(processed_file_path)
 
 # get the product with 20 reviews
-product_id = get_product_with_n_reviews(processed_file_path,20)
+product_id = get_product_with_n_reviews(processed_file_path,40)
 
 # get the review text for the product 20 reviews
 reviews = (dataset[dataset['productId'] == product_id])['reviewText']
@@ -54,8 +54,7 @@ reviews_sentences = split_into_sentences(reviews)
 
 processed_series = lemmatisation_stopwords_series(reviews_sentences)
 
-# transform series into list of strings
-sequences_list = processed_series.tolist()
+sequences_list = tokenize_reviews_to_sequences(processed_series, 5)
 
 ####################### LDA #######################
 
@@ -65,33 +64,41 @@ from sklearn.feature_extraction.text import CountVectorizer
 vectorizer = CountVectorizer()
 dtm = vectorizer.fit_transform(sequences_list)
 
+print("VOCABULARY IN THE REVIEWS")
 vocab = vectorizer.get_feature_names_out()
+
+word2id = vectorizer.vocabulary_
+
+print(vocab)
 
 from sklearn.decomposition import LatentDirichletAllocation
 
 # Define general themes and their keywords
-seed_topics = {
-    "Price": ["cheap", "expensive", "price", "value", "affordable", "cost-effective", "budget-friendly", "inexpensive", "pricy", "overpriced", "costly"],
-    "Quality": ["good", "bad", "quality", "durable", "high-quality", "low-quality", "well-made", "fragile", "sturdy", "weak", "reliable", "unreliable"],
-    "Use": ["easy", "difficult", "use", "works", "intuitive", "counterintuitive", "straightfoward", "complicated", "efficient", "inefficient", "unreliable"],
-    "Design": ["nice", "ugly", "design", "aesthetic", "stylish", "unstylish", "atractive", "modern", "outdated", "elegant", "tastefull", "tasteless"],
-}
+seed_topic_list = [["cheap", "expensive", "price", "value", "affordable", "cost-effective", "budget-friendly", "inexpensive", "pricy", "overpriced", "costly"],
+    ["good", "bad", "quality", "durable", "high-quality", "low-quality", "well-made", "fragile", "sturdy", "weak", "reliable", "unreliable"],
+    ["easy", "difficult", "use", "works", "intuitive", "counterintuitive", "straightfoward", "complicated", "efficient", "inefficient", "unreliable"],
+    ["nice", "ugly", "design", "aesthetic", "stylish", "unstylish", "atractive", "modern", "outdated", "elegant", "tastefull", "tasteless"],
+]
 
-seed_word_ids = {}
-for topic_id, words in seed_topics.items():
-    seed_word_ids[topic_id] = [vocab.tolist().index(word) for word in words if word in vocab]
+seed_topics = {}
+for t_id, st in enumerate(seed_topic_list):
+    for word in st:
+        if word in word2id:
+            seed_topics[word2id[word]] = t_id
+        else:
+            print(f"Warning: The word '{word}' is not in the vocabulary and will be skipped.")
 
 model = guidedlda.GuidedLDA(
     n_topics=4,
     n_iter=100,
-    random_state=0,
-    refresh=20
+    random_state=7,
+    refresh=10
 )
 
 # adjust guidedLDA with seed words
 model.fit(
     dtm,
-    seed_topics=seed_word_ids,
+    seed_topics=seed_topics,
     seed_confidence=0.15  
 )
 
