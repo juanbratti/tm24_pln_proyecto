@@ -10,8 +10,12 @@ def main():
     # preprocessing of reviews
     dataset, reviews_cleaned, product_id = load_and_preprocess_data(processed_file_path, 40)
 
+    tokens = 0
+    # 0 to tokenize in sentences
+    # n>0 to tokenize in n-grams
+
     # tokenizetion of reviews
-    sequences_list, sequences_series = tokenize_reviews(reviews_cleaned) 
+    sequences_list, sequences_series = tokenize_reviews(reviews_cleaned, tokens) 
     # sequences_list is a python list
     # sequences_series is a pandas series
 
