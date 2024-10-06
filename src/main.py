@@ -8,7 +8,26 @@ def main():
     processed_file_path = '../data/parsed_input_file.csv'
 
     # preprocessing of reviews
-    dataset, reviews_cleaned, product_id = load_and_preprocess_data(processed_file_path, 40)
+
+    params = {
+        'file_path': processed_file_path,
+        'product_review_count': 40,
+        # delete?
+        'nan': True, 
+        'emojis': True,
+        'contractions': True,
+        'special_chars': True,
+        'whitespaces': True,
+        'stopwords': True,
+        'lemmatization': True,
+        'lowercase': True,
+        'emails_and_urls': True,
+        'nouns': True,
+        'adj': True,
+        'numbers': True
+    }
+
+    dataset, reviews_cleaned, product_id = load_and_preprocess_data(params)
 
     tokens = 0
     # 0 to tokenize in sentences

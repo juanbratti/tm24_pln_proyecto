@@ -205,9 +205,9 @@ def split_into_sentences(reviews):
     
     return pd.Series(sentences)
 
-def lemmatisation_stopwords_text(text):
+def lemmatize_text(text):
     """
-    Lemmatizes a text and eliminates its stopwords.
+    Lemmatizes a text without removing stopwords.
     
     Args:
         text (str)
@@ -216,20 +216,44 @@ def lemmatisation_stopwords_text(text):
         str:
     """
     doc = nlp(text)
-    processed_text = ' '.join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct and not token.is_space])
-    return processed_text
+    lemmatized_text = ' '.join([token.lemma_ for token in doc if not token.is_punct and not token.is_space])
+    return lemmatized_text
 
-def lemmatisation_stopwords_series(df):
+def remove_stopwords(text):
     """
-    Lemmatizes a Series and eliminates the stopwords identified in each row.
+    Removes stopwords from the text without lemmatization.
     
     Args:
-        df (pd.Series)
+        text (str)
 
     Returns:
-        pd.Series
+        str:
     """
-    df = df.apply(lemmatisation_stopwords_text)
+    doc = nlp(text)
+    no_stopwords_text = ' '.join([token.text for token in doc if not token.is_stop and not token.is_punct and not token.is_space])
+    return no_stopwords_text
+
+def lemmatisation_stopwords_series(df, rm_stopwords, lemmatize):
+    """
+    Lemmatizes and removes stopwords from a pandas series of text.
+
+    Args:
+        df (pd.Series): A pandas series of text.
+        rm_stopwords (bool): Whether to remove stopwords.
+        lemmatize (bool): Whether to lemmatize the text.
+
+    Returns:
+        pd.Series: The processed text.
+    """
+
+    if rm_stopwords and lemmatize:
+        df = df.apply(lemmatize_text)
+        df = df.apply(remove_stopwords)
+    elif rm_stopwords and not lemmatize:
+        df = df.apply(remove_stopwords)
+    elif lemmatize and not rm_stopwords:
+        df = df.apply(lemmatize_text)
+
     return df
 
 # --------------------------------------------- 
@@ -340,41 +364,62 @@ def filter_adjectives_spacy(text_series):
    
     return pd.Series(filtered_text)
 
-def clean_reviews(review):
+def clean_reviews(reviews, params):
     """
     Preprocess the reviews
 
     Args:
         review : pd.Series
+        params : dict
     
     Returns:
         review_cleaned : pd.Series
     """
+
     # handling missing values
-    reviews_raw = review.dropna()
+    if params['nan']:
+        reviews = reviews.dropna()
 
     # removing emojis
-    reviews_emojint = reviews_raw.apply(lambda x: emoji.replace_emoji(x, replace=''))
+    if params['emojis']:
+        reviews = reviews.apply(lambda x: emoji.replace_emoji(x, replace=''))
 
     # lowercase the reviews 
-    reviews_in_lowercase = reviews_emojint.str.lower()
+    if params['lowercase']:
+        reviews = reviews.str.lower()
 
     # remove extra white-spaces
-    reviews_no_extra_whitespace = reviews_in_lowercase.str.strip().str.replace(r'\s+', ' ', regex=True)
+    if params['whitespaces']:
+        reviews = reviews.str.strip().str.replace(r'\s+', ' ', regex=True)
 
     # remove special characters
-    reviews_no_special_char = reviews_no_extra_whitespace.str.replace(r'[^\w\s]', '', regex=True)
+    if params['special_chars']:
+        reviews = reviews.str.replace(r'[^\w\s]', '', regex=True)
 
     # remove numbers
-    reviews_no_numbers = reviews_no_special_char.str.replace(r'\d+', '', regex=True)
-
+    if params['numbers']:
+        reviews = reviews.str.replace(r'\d+', '', regex=True)
+    
     # remove urls and email addresses
-    reviews_no_url = reviews_no_numbers.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
-    reviews_no_emails = reviews_no_url.str.replace(r'\S+@\S+', '', regex=True) 
+    if params['emails_and_urls']:
+        reviews = reviews.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
+        reviews = reviews.str.replace(r'\S+@\S+', '', regex=True) 
 
     # transform contractions
-    reviews_no_contractions = reviews_no_emails.apply(contractions.fix)
+    if params['contractions']:
+        reviews = reviews.apply(contractions.fix)
 
-    return reviews_no_contractions
+    # remove nouns
+    if params['nouns']:
+        reviews = filter_nouns_spacy(reviews)
+
+    # remove adjectives
+    if params['adj']:
+        reviews = filter_adjectives_spacy(reviews)
+
+    # remove stopwords and lemmatize
+    reviews = lemmatisation_stopwords_series(reviews, params['stopwords'], params['lemmatization'])
+
+    return reviews
 
     
