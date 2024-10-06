@@ -1,6 +1,6 @@
 import pandas as pd
 from scripts.preprocessing import load_and_preprocess_data, tokenize_reviews, vectorize_sequences
-from scripts.topic_modelling import apply_bertopic
+from scripts.topic_modelling import apply_bertopic, visualize
 
 def main():
 
@@ -28,6 +28,15 @@ def main():
      # Display the topics found
     print("Topics discovered:")
     print(topic_model.get_topic_info())
+    print(topic_model.get_document_info(sequences_list))
+    print(topic_model.get_representative_docs())
+    print(topic_model.topic_labels_)
+    print(topic_model.hierarchical_topics(sequences_list))
+    print(topic_model.topic_aspects_)
+    
+    print("-----------------------------------------")
+
+    visualize(topic_model, sequences_list)
 
 if __name__ == "__main__":
     main()
