@@ -1,0 +1,3 @@
+Data is from https://snap.stanford.edu/data/web-Amazon-links.html (Arts.txt.gz)
+
+productId,productTitle,productScore,reviewSummary,reviewText

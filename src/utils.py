@@ -2,6 +2,8 @@ import csv # this is for the creation of the resulting CSV file
 import pandas as pd
 import emoji
 import spacy
+import contractions
+
 
 # --------------------------------------------- FUNCTIONS
 
@@ -58,8 +60,6 @@ def parse_reviews_txt_to_csv(input_file):
     print("CSV file 'parsed_input_file.csv' has been created.")
     return '../data/parsed_input_file.csv'
 
-# Now, we want to get the amount of reviews per productId using pandas
-
 def get_reviews_per_product(input_file):
     """
     From a parsed csv file, returns the amount of reviews per productId (in a Series).
@@ -98,6 +98,46 @@ def get_product_with_max_reviews(input_file):
 
     return product_id, max_reviews
 
+def get_product_with_n_reviews(input_file,n):
+    
+        """
+        From a parsed csv file, returns the productId that has n reviews.
+        
+        Args:
+            input_file (str): The path to the input text file.
+    
+        Returns: 
+            product_id (str): The productId with the most reviews.
+        """
+    
+        reviews_per_product = get_reviews_per_product(input_file)
+        # get the reviews of the product that has n reviews
+        product_id = reviews_per_product[reviews_per_product == n].index[0]
+
+        return product_id
+    
+
+def get_products_with_reviews_in_range(input_file, n, x, y):
+    """
+    From a parsed CSV file, returns a list of productIds that have between x and y reviews.
+
+    Args:
+        input_file (str): The path to the input CSV file.
+        n (int): The number of productIds to return.
+        x (int): Minimum number of reviews a product must have.
+        y (int): Maximum number of reviews a product must have.
+
+    Returns:
+        product_ids (list): A list of productIds with between x and y reviews, up to n products.
+    """
+    
+    reviews_per_product = get_reviews_per_product(input_file)
+    
+    filtered_products = reviews_per_product[(reviews_per_product >= x) & (reviews_per_product <= y)]
+    
+    product_ids = filtered_products.index[:n].tolist()
+    
+    return product_ids
 
 def detect_emojis(text):
     """
@@ -132,7 +172,7 @@ def tokenize_reviews_to_sequences(reviews, sequence_length):
         sequence_length (int): The length of each sequence.
 
     Returns:
-        pd.DataFrame: A DataFrame with sequences of tokens.
+        pd.Series
     """
     sequences = []
     
@@ -140,10 +180,198 @@ def tokenize_reviews_to_sequences(reviews, sequence_length):
         doc = nlp(review)
         tokens = [token.text for token in doc if not token.is_punct and not token.is_space]
         for i in range(0, len(tokens) - sequence_length + 1):
-            sequence = tokens[i:i + sequence_length]
+            sequence = ' '.join(tokens[i:i + sequence_length])
             sequences.append(sequence)
     
-    return pd.DataFrame(sequences, columns=[f'word_{i+1}' for i in range(sequence_length)])
+    return pd.Series(sequences)
+
+# break reviews into a list of sentences
+def split_into_sentences(reviews):
+    """
+    Receives a series of reviews, and returns a series of sentences.
+    
+    Args:
+        reviews (pd.Series): A pandas series containing review texts.
+
+    Returns:
+        pd.Series: A series of sentences.
+    """
+    sentences = []
+    
+    for review in reviews:
+        doc = nlp(review)
+        for sent in doc.sents:
+            sentences.append(sent.text)
+    
+    return pd.Series(sentences)
+
+def lemmatisation_stopwords_text(text):
+    """
+    Lemmatizes a text and eliminates its stopwords.
+    
+    Args:
+        text (str)
+
+    Returns:
+        str:
+    """
+    doc = nlp(text)
+    processed_text = ' '.join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct and not token.is_space])
+    return processed_text
+
+def lemmatisation_stopwords_series(df):
+    """
+    Lemmatizes a Series and eliminates the stopwords identified in each row.
+    
+    Args:
+        df (pd.Series)
+
+    Returns:
+        pd.Series
+    """
+    df = df.apply(lemmatisation_stopwords_text)
+    return df
 
 # --------------------------------------------- 
 
+def get_reviews_from_top_x_products(file_path, x):
+
+    """
+    Gets the reviews for the top x products with the most reviews.
+    
+    Args:
+        file_path (str): The path to the input CSV file.
+        x (int): The number of products to consider
+
+    Returns:
+        pd.Series: The combined reviews for the top x products.
+    """
+    dataset = pd.read_csv(file_path)
+    
+    # Contar las reseñas por producto
+    product_counts = dataset['productId'].value_counts()
+    
+    # Obtener los primeros x productos con más reseñas
+    top_products = product_counts.head(x).index.tolist()
+    
+    # Filtrar las reseñas para estos productos y combinarlas
+    combined_reviews = dataset[dataset['productId'].isin(top_products)]['reviewText']
+    
+    return combined_reviews
+
+def filter_nouns_spacy(text_series):
+    """
+    Filters out non-noun words from a series of text reviews using spaCy.
+    
+    Args:
+        text_series (pd.Series): A pandas series containing review
+
+    Returns:
+        pd.Series: A new series with the filtered text
+    """
+    filtered_text = []
+    
+    for review in text_series:
+        # Procesar el texto con spaCy para obtener las categorías gramaticales
+        doc = nlp(review)
+        
+        # Filtrar palabras que no son sustantivos (pos_ == 'NOUN' para sustantivos)
+        nouns_adj = [token.text for token in doc if token.pos_ in ['NOUN', 'ADJ']]
+        
+        # Unir las palabras filtradas en una cadena de texto
+        filtered_text.append(" ".join(nouns_adj))
+    
+    return pd.Series(filtered_text)
+
+def map_lda_to_general_topic(lda_topics, general_topics):
+
+    """
+    Maps LDA topics to general topics based on keywords.
+
+    Args:
+        lda_topics (list): A list of topics generated by LDA.
+        general_topics (dict): A dictionary mapping general topics to keywords.
+
+    Returns:
+        dict: A mapping of LDA topics to general topics.
+    """
+    mapped_topics = {}
+    for idx, topic_words in enumerate(lda_topics):
+        for general_topic, keywords in general_topics.items():
+            if any(any(keyword in word for word in topic_words) for keyword in keywords):
+                mapped_topics[f"Topic {idx}"] = general_topic
+                break
+        else:
+            mapped_topics[f"Topic {idx}"] = 'Other'
+    return mapped_topics
+
+# vectorization
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+
+
+def optimal_topic_number(sequences, topic_range):
+    perplexities = []
+
+    vectorizer = CountVectorizer()
+
+    for num_topics in topic_range:
+        lda_model = LatentDirichletAllocation(n_components=num_topics, random_state=0)
+        dtm = vectorizer.fit_transform(sequences)
+        lda_model.fit(dtm)
+        perplexity = lda_model.perplexity(dtm)
+        perplexities.append(perplexity)
+
+    optimal_num_topics = topic_range[perplexities.index(min(perplexities))]
+    return optimal_num_topics
+
+def filter_adjectives_spacy(text_series):
+    filtered_text = []
+    
+    for review in text_series:
+        # Procesar el texto con spaCy para obtener las categorías gramaticales
+        doc = nlp(review)
+      
+        # Filtrar palabras que son adjetivos (pos_ == 'ADJ' para adjetivos)
+        adjectives = [token.text for token in doc if token.pos_ == 'ADJ']
+       
+        # Unir los adjetivos en una cadena de texto
+        filtered_text.append(" ".join(adjectives))
+   
+    return pd.Series(filtered_text)
+
+def clean_reviews(review):
+    """
+    Preprocess the reviews
+
+    Args:
+        review : pd.Series
+    
+    Returns:
+        review_cleaned : pd.Series
+    """
+    # handling missing values
+    reviews_raw = review.dropna()
+
+    # removing emojis
+    reviews_emojint = reviews_raw.apply(lambda x: emoji.replace_emoji(x, replace=''))
+
+    # lowercase the reviews 
+    reviews_in_lowercase = reviews_emojint.str.lower()
+
+    # remove extra white-spaces
+    reviews_no_extra_whitespace = reviews_in_lowercase.str.strip().str.replace(r'\s+', ' ', regex=True)
+
+    # remove special characters
+    reviews_no_special_char = reviews_no_extra_whitespace.str.replace(r'[^\w\s]', '', regex=True)
+
+    # remove urls and email addresses
+    reviews_no_url = reviews_no_special_char.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
+    reviews_no_emails = reviews_no_url.str.replace(r'\S+@\S+', '', regex=True) 
+
+    # transform contractions
+    reviews_no_contractions = reviews_no_emails.apply(contractions.fix)
+
+    return reviews_no_contractions
+
+    

@@ -1,0 +1,5 @@
+pandas
+emoji
+spacy
+nltk
+scikit-learn
