@@ -42,7 +42,8 @@ def load_and_preprocess_data(params):
         'emails_and_urls': params['emails_and_urls'],
         'nouns': params['nouns'],
         'adj': params['adj'],
-        'numbers': params['numbers']
+        'numbers': params['numbers'],
+        'most_frequent': params['most_frequent']
     }
 
     # extraction and cleaning the reviews

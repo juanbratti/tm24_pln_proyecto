@@ -22,9 +22,10 @@ def main():
         'lemmatization': True,
         'lowercase': True,
         'emails_and_urls': True,
-        'nouns': True,
-        'adj': True,
-        'numbers': True
+        'nouns': False,
+        'adj': False,
+        'numbers': True,
+        'most_frequent': 3
     }
 
     dataset, reviews_cleaned, product_id = load_and_preprocess_data(params)

@@ -3,3 +3,6 @@ emoji
 spacy
 nltk
 scikit-learn
+contractions
+bertopic
+Counter

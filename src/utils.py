@@ -364,6 +364,31 @@ def filter_adjectives_spacy(text_series):
    
     return pd.Series(filtered_text)
 
+from collections import Counter
+
+def remove_frequent_words(reviews, top_n_frequent):
+    """
+    Remove the most frequent words from the reviews.
+
+    Args:
+        reviews : pd.Series
+        top_n_frequent : int, number of frequent words to remove
+
+    Returns:
+        review_cleaned : pd.Series
+    """
+
+    # Tokenize the reviews into words
+    all_words = reviews.str.split().explode()
+
+    # Find the most frequent words
+    most_common_words = [word for word, count in Counter(all_words).most_common(top_n_frequent)]
+
+    # Remove the most frequent words from the reviews
+    reviews_cleaned = reviews.apply(lambda review: ' '.join([word for word in review.split() if word not in most_common_words]))
+
+    return reviews_cleaned
+
 def clean_reviews(reviews, params):
     """
     Preprocess the reviews
@@ -417,9 +442,12 @@ def clean_reviews(reviews, params):
     if params['adj']:
         reviews = filter_adjectives_spacy(reviews)
 
+    # remove k frequent words
+    if params['most_frequent']>0:
+        reviews = remove_frequent_words(reviews, params['most_frequent'])
+
     # remove stopwords and lemmatize
     reviews = lemmatisation_stopwords_series(reviews, params['stopwords'], params['lemmatization'])
 
     return reviews
 
-    
