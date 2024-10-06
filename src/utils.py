@@ -99,22 +99,22 @@ def get_product_with_max_reviews(input_file):
     return product_id, max_reviews
 
 def get_product_with_n_reviews(input_file,n):
+    """
+    From a parsed csv file, returns the productId that has n reviews.
+       
+    Args:
+        input_file (str): The path to the input text file.
     
-        """
-        From a parsed csv file, returns the productId that has n reviews.
-        
-        Args:
-            input_file (str): The path to the input text file.
+    Returns: 
+        product_id (str): The productId with the most reviews.
+    """
     
-        Returns: 
-            product_id (str): The productId with the most reviews.
-        """
-    
-        reviews_per_product = get_reviews_per_product(input_file)
-        # get the reviews of the product that has n reviews
-        product_id = reviews_per_product[reviews_per_product == n].index[0]
+    reviews_per_product = get_reviews_per_product(input_file)
 
-        return product_id
+    # get the reviews of the product that has n reviews
+    product_id = reviews_per_product[reviews_per_product == n].index[0]
+
+    return product_id
     
 
 def get_products_with_reviews_in_range(input_file, n, x, y):
@@ -365,8 +365,11 @@ def clean_reviews(review):
     # remove special characters
     reviews_no_special_char = reviews_no_extra_whitespace.str.replace(r'[^\w\s]', '', regex=True)
 
+    # remove numbers
+    reviews_no_numbers = reviews_no_special_char.str.replace(r'\d+', '', regex=True)
+
     # remove urls and email addresses
-    reviews_no_url = reviews_no_special_char.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
+    reviews_no_url = reviews_no_numbers.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
     reviews_no_emails = reviews_no_url.str.replace(r'\S+@\S+', '', regex=True) 
 
     # transform contractions
