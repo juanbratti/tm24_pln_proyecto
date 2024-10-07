@@ -44,7 +44,9 @@ def main():
         ["use", "easy", "difficult", "works", "intuitive", "counterintuitive", "straightfoward", "complicated", "efficient", "inefficient", "unreliable"],
         ["design", "nice", "ugly", "aesthetic", "stylish", "unstylish", "attractive", "modern", "outdated", "elegant", "tasteful", "tasteless"]
     ]
-    model = "all-MiniLM-L6-v2" # o "umap"
+    # Select model
+    model = "all-MiniLM-L6-v2"
+    # model = "umap"
     reduced_topics = 10
     # application of BERTopic  modeling
     topic_model = apply_bertopic(sequences_list, seed_topic_list, model, reduced_topics)
