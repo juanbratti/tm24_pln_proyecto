@@ -1,4 +1,5 @@
 import pandas as pd
+from models.guidedlda import apply_guidedlda
 from scripts.preprocessing import load_and_preprocess_data, tokenize_reviews, vectorize_sequences
 from scripts.topic_modelling import apply_bertopic, visualize, print_model_info
 
@@ -54,6 +55,8 @@ def main():
     print_model_info(topic_model, sequences_list)
 
     visualize(topic_model, sequences_list)
+
+    topic_model_guidedlda = apply_guidedlda(sequences_list, seed_topic_list)
 
 if __name__ == "__main__":
     main()
