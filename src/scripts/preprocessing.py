@@ -55,7 +55,7 @@ def load_and_preprocess_data(params):
     
     return dataset, reviews_cleaned, product_id
 
-def tokenize_reviews(reviews_cleaned, tokens):
+def tokenize_reviews(reviews_cleaned, tokens, stopwords, lemmatization):
     """
     Tokenizes the cleaned reviews and returns a list of sequences.
 
@@ -73,8 +73,13 @@ def tokenize_reviews(reviews_cleaned, tokens):
     else:
         reviews_tokens = tokenize_reviews_to_sequences(reviews_cleaned, tokens)
 
+    # remove stopwords and lemmatize
+    reviews_tokens = lemmatisation_stopwords_series(reviews_tokens, stopwords, lemmatization)
+
     # convertion of the tokenized series to a list of strings
     sequences_list = reviews_tokens.tolist()
+
+    
     
     return sequences_list, reviews_tokens
 

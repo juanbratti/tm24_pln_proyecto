@@ -418,8 +418,8 @@ def clean_reviews(reviews, params):
         reviews = reviews.str.strip().str.replace(r'\s+', ' ', regex=True)
 
     # remove special characters
-    if params['special_chars']:
-        reviews = reviews.str.replace(r'[^\w\s]', '', regex=True)
+    #if params['special_chars']:
+    #    reviews = reviews.str.replace(r'[^\w\s.,!?]', '', regex=True)
 
     # remove numbers
     if params['numbers']:
@@ -445,9 +445,6 @@ def clean_reviews(reviews, params):
     # remove k frequent words
     if params['most_frequent']>0:
         reviews = remove_frequent_words(reviews, params['most_frequent'])
-
-    # remove stopwords and lemmatize
-    reviews = lemmatisation_stopwords_series(reviews, params['stopwords'], params['lemmatization'])
 
     return reviews
 
