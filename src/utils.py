@@ -99,22 +99,22 @@ def get_product_with_max_reviews(input_file):
     return product_id, max_reviews
 
 def get_product_with_n_reviews(input_file,n):
+    """
+    From a parsed csv file, returns the productId that has n reviews.
+       
+    Args:
+        input_file (str): The path to the input text file.
     
-        """
-        From a parsed csv file, returns the productId that has n reviews.
-        
-        Args:
-            input_file (str): The path to the input text file.
+    Returns: 
+        product_id (str): The productId with the most reviews.
+    """
     
-        Returns: 
-            product_id (str): The productId with the most reviews.
-        """
-    
-        reviews_per_product = get_reviews_per_product(input_file)
-        # get the reviews of the product that has n reviews
-        product_id = reviews_per_product[reviews_per_product == n].index[0]
+    reviews_per_product = get_reviews_per_product(input_file)
 
-        return product_id
+    # get the reviews of the product that has n reviews
+    product_id = reviews_per_product[reviews_per_product == n].index[0]
+
+    return product_id
     
 
 def get_products_with_reviews_in_range(input_file, n, x, y):
@@ -205,9 +205,9 @@ def split_into_sentences(reviews):
     
     return pd.Series(sentences)
 
-def lemmatisation_stopwords_text(text):
+def lemmatize_text(text):
     """
-    Lemmatizes a text and eliminates its stopwords.
+    Lemmatizes a text without removing stopwords.
     
     Args:
         text (str)
@@ -216,20 +216,44 @@ def lemmatisation_stopwords_text(text):
         str:
     """
     doc = nlp(text)
-    processed_text = ' '.join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct and not token.is_space])
-    return processed_text
+    lemmatized_text = ' '.join([token.lemma_ for token in doc if not token.is_punct and not token.is_space])
+    return lemmatized_text
 
-def lemmatisation_stopwords_series(df):
+def remove_stopwords(text):
     """
-    Lemmatizes a Series and eliminates the stopwords identified in each row.
+    Removes stopwords from the text without lemmatization.
     
     Args:
-        df (pd.Series)
+        text (str)
 
     Returns:
-        pd.Series
+        str:
     """
-    df = df.apply(lemmatisation_stopwords_text)
+    doc = nlp(text)
+    no_stopwords_text = ' '.join([token.text for token in doc if not token.is_stop and not token.is_punct and not token.is_space])
+    return no_stopwords_text
+
+def lemmatisation_stopwords_series(df, rm_stopwords, lemmatize):
+    """
+    Lemmatizes and removes stopwords from a pandas series of text.
+
+    Args:
+        df (pd.Series): A pandas series of text.
+        rm_stopwords (bool): Whether to remove stopwords.
+        lemmatize (bool): Whether to lemmatize the text.
+
+    Returns:
+        pd.Series: The processed text.
+    """
+
+    if rm_stopwords and lemmatize:
+        df = df.apply(lemmatize_text)
+        df = df.apply(remove_stopwords)
+    elif rm_stopwords and not lemmatize:
+        df = df.apply(remove_stopwords)
+    elif lemmatize and not rm_stopwords:
+        df = df.apply(lemmatize_text)
+
     return df
 
 # --------------------------------------------- 
@@ -340,38 +364,90 @@ def filter_adjectives_spacy(text_series):
    
     return pd.Series(filtered_text)
 
-def clean_reviews(review):
+from collections import Counter
+
+def remove_frequent_words(reviews, top_n_frequent):
+    """
+    Remove the most frequent words from the reviews.
+
+    Args:
+        reviews : pd.Series
+        top_n_frequent : int, number of frequent words to remove
+
+    Returns:
+        review_cleaned : pd.Series
+    """
+
+    # Tokenize the reviews into words
+    all_words = reviews.str.split().explode()
+
+    # Find the most frequent words
+    most_common_words = [word for word, count in Counter(all_words).most_common(top_n_frequent)]
+
+    # Remove the most frequent words from the reviews
+    reviews_cleaned = reviews.apply(lambda review: ' '.join([word for word in review.split() if word not in most_common_words]))
+
+    return reviews_cleaned
+
+def clean_reviews(reviews, params):
     """
     Preprocess the reviews
 
     Args:
         review : pd.Series
+        params : dict
     
     Returns:
         review_cleaned : pd.Series
     """
+
     # handling missing values
-    reviews_raw = review.dropna()
+    if params['nan']:
+        reviews = reviews.dropna()
 
     # removing emojis
-    reviews_emojint = reviews_raw.apply(lambda x: emoji.replace_emoji(x, replace=''))
+    if params['emojis']:
+        reviews = reviews.apply(lambda x: emoji.replace_emoji(x, replace=''))
 
     # lowercase the reviews 
-    reviews_in_lowercase = reviews_emojint.str.lower()
+    if params['lowercase']:
+        reviews = reviews.str.lower()
 
     # remove extra white-spaces
-    reviews_no_extra_whitespace = reviews_in_lowercase.str.strip().str.replace(r'\s+', ' ', regex=True)
+    if params['whitespaces']:
+        reviews = reviews.str.strip().str.replace(r'\s+', ' ', regex=True)
 
     # remove special characters
-    reviews_no_special_char = reviews_no_extra_whitespace.str.replace(r'[^\w\s]', '', regex=True)
+    if params['special_chars']:
+        reviews = reviews.str.replace(r'[^\w\s]', '', regex=True)
 
+    # remove numbers
+    if params['numbers']:
+        reviews = reviews.str.replace(r'\d+', '', regex=True)
+    
     # remove urls and email addresses
-    reviews_no_url = reviews_no_special_char.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
-    reviews_no_emails = reviews_no_url.str.replace(r'\S+@\S+', '', regex=True) 
+    if params['emails_and_urls']:
+        reviews = reviews.str.replace(r'http\S+|www\S+|mailto:\S+', '', regex=True)
+        reviews = reviews.str.replace(r'\S+@\S+', '', regex=True) 
 
     # transform contractions
-    reviews_no_contractions = reviews_no_emails.apply(contractions.fix)
+    if params['contractions']:
+        reviews = reviews.apply(contractions.fix)
 
-    return reviews_no_contractions
+    # remove nouns
+    if params['nouns']:
+        reviews = filter_nouns_spacy(reviews)
 
-    
+    # remove adjectives
+    if params['adj']:
+        reviews = filter_adjectives_spacy(reviews)
+
+    # remove k frequent words
+    if params['most_frequent']>0:
+        reviews = remove_frequent_words(reviews, params['most_frequent'])
+
+    # remove stopwords and lemmatize
+    reviews = lemmatisation_stopwords_series(reviews, params['stopwords'], params['lemmatization'])
+
+    return reviews
+

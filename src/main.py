@@ -8,10 +8,34 @@ def main():
     processed_file_path = '../data/parsed_input_file.csv'
 
     # preprocessing of reviews
-    dataset, reviews_cleaned, product_id = load_and_preprocess_data(processed_file_path, 40)
+
+    params = {
+        'file_path': processed_file_path,
+        'product_review_count': 40,
+        # delete?
+        'nan': True, 
+        'emojis': True,
+        'contractions': True,
+        'special_chars': True,
+        'whitespaces': True,
+        'stopwords': True,
+        'lemmatization': True,
+        'lowercase': True,
+        'emails_and_urls': True,
+        'nouns': False,
+        'adj': False,
+        'numbers': True,
+        'most_frequent': 3
+    }
+
+    dataset, reviews_cleaned, product_id = load_and_preprocess_data(params)
+
+    tokens = 0
+    # 0 to tokenize in sentences
+    # n>0 to tokenize in n-grams
 
     # tokenizetion of reviews
-    sequences_list, sequences_series = tokenize_reviews(reviews_cleaned) 
+    sequences_list, sequences_series = tokenize_reviews(reviews_cleaned, tokens) 
     # sequences_list is a python list
     # sequences_series is a pandas series
 
