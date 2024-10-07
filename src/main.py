@@ -35,7 +35,7 @@ def main():
     # n>0 to tokenize in n-grams
 
     # tokenizetion of reviews
-    sequences_list, sequences_series = tokenize_reviews(reviews_cleaned, tokens) 
+    sequences_list, sequences_series = tokenize_reviews(reviews_cleaned, tokens, params['stopwords'], params['lemmatization']) 
     # sequences_list is a python list
     # sequences_series is a pandas series
     seed_topic_list = [
