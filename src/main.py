@@ -2,6 +2,8 @@ import pandas as pd
 from models.guidedlda import apply_guidedlda
 from scripts.preprocessing import load_and_preprocess_data, tokenize_reviews, vectorize_sequences
 from scripts.topic_modelling import apply_bertopic, visualize, print_model_info
+from models.topics_kmeans import *
+from models.topics_lda import *
 
 def main():
 
@@ -46,6 +48,7 @@ def main():
         ["design", "nice", "ugly", "aesthetic", "stylish", "unstylish", "attractive", "modern", "outdated", "elegant", "tasteful", "tasteless"]
     ]
     # Select model
+    ######################BERTOPIC############################
     model = "all-MiniLM-L6-v2"
     # model = "umap"
     reduced_topics = 10
@@ -56,7 +59,26 @@ def main():
 
     visualize(topic_model, sequences_list)
 
-    topic_model_guidedlda = apply_guidedlda(sequences_list, seed_topic_list)
+    # ###################GUIDEDLDA##############################
+    # topic_model_guidedlda = apply_guidedlda(sequences_list, seed_topic_list)
+
+
+    # ####################KMEANS################################
+    # n_clusters = 10
+    # important_words = 5
+    # topic_model, topics = apply_kmeans(sequences_list, n_clusters)
+    
+    # print_model_info_kmeans(topic_model, sequences_list, n_clusters, important_words)
+
+    # visualize_kmeans(topic_model, sequences_list)
+
+
+    # ####################LDA###################################
+    # num_topics = 10
+    # topic_model = apply_lda(sequences_list, num_topics)
+    # shown_docs = 20
+    # print_model_info_lda(topic_model, sequences_list, shown_docs)
+
 
 if __name__ == "__main__":
     main()
