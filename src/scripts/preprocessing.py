@@ -28,7 +28,7 @@ def load_and_preprocess_data(params):
     dataset = pd.read_csv(file_path)
     
     # retrieve the product with a specific number of reviews
-    product_id = get_product_with_n_reviews(file_path, product_review_count)
+    # product_id = get_product_with_n_reviews(file_path, product_review_count)
     
     params_clean_review = {
         'nan': params['nan'],
@@ -47,13 +47,16 @@ def load_and_preprocess_data(params):
     }
 
     # extraction and cleaning the reviews
-    reviews_raw = dataset[dataset['productId'] == product_id]['reviewText']
+    # reviews_raw = dataset[dataset['productId'] == product_id]['reviewText']
+
+    # first column only
+    reviews_raw = dataset.iloc[:, 0]
     reviews_cleaned = clean_reviews(reviews_raw, params_clean_review)
 
     # save the file to a csv
-    reviews_raw.to_csv(f'../data/processed/product_{product_id}_processed.csv', index=False)
+    reviews_raw.to_csv(f'../data/processed/product_processed.csv', index=False)
     
-    return dataset, reviews_cleaned, product_id
+    return dataset, reviews_cleaned
 
 def tokenize_reviews(reviews_cleaned, tokens, stopwords, lemmatization):
     """
