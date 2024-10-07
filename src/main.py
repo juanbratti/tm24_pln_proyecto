@@ -1,4 +1,5 @@
 import pandas as pd
+from models.guidedlda import apply_guidedlda
 from scripts.preprocessing import load_and_preprocess_data, tokenize_reviews, vectorize_sequences
 from scripts.topic_modelling import apply_bertopic, visualize, print_model_info
 from models.topics_kmeans import *
@@ -58,6 +59,10 @@ def main():
 
     visualize(topic_model, sequences_list)
 
+    # ###################GUIDEDLDA##############################
+    # topic_model_guidedlda = apply_guidedlda(sequences_list, seed_topic_list)
+
+
     # ####################KMEANS################################
     # n_clusters = 10
     # important_words = 5
@@ -67,11 +72,13 @@ def main():
 
     # visualize_kmeans(topic_model, sequences_list)
 
+
     # ####################LDA###################################
     # num_topics = 10
     # topic_model = apply_lda(sequences_list, num_topics)
     # shown_docs = 20
     # print_model_info_lda(topic_model, sequences_list, shown_docs)
+
 
 if __name__ == "__main__":
     main()
