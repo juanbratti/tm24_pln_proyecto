@@ -49,15 +49,15 @@ def main():
     ]
     # Select model
     ######################BERTOPIC############################
-    model = "all-MiniLM-L6-v2"
-    # model = "umap"
+    # model = "all-MiniLM-L6-v2"
+    model = "umap"
     reduced_topics = 10
     # application of BERTopic  modeling
     topic_model = apply_bertopic(sequences_list, seed_topic_list, model, reduced_topics)
 
-    print_model_info(topic_model, sequences_list)
+    print_model_info(topic_model, sequences_list, model)
 
-    visualize(topic_model, sequences_list)
+    visualize(topic_model, sequences_list, model)
 
     # ###################GUIDEDLDA##############################
     # topic_model_guidedlda = apply_guidedlda(sequences_list, seed_topic_list)

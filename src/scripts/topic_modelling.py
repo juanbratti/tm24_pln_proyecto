@@ -37,25 +37,26 @@ def apply_bertopic(sequences, seed_topic_list, model, reduced_topics):
 
     return topic_model
 
-def visualize(topic_model, sequences_list):
+def visualize(topic_model, sequences_list, model):
     fig = topic_model.visualize_topics()
-    fig.write_image("./images/bt_topics.png")
+    fig.write_image(f"./images/bt_topics_{model}.png")
     fig = topic_model.visualize_hierarchy()
-    fig.write_image("./images/bt_topic_hierarchy.png")
+    fig.write_image(f"./images/bt_topic_hierarchy_{model}.png")
     fig = topic_model.visualize_barchart()
-    fig.write_image("./images/bt_topic_barchart.png")
+    fig.write_image(f"./images/bt_topic_barchart_{model}.png")
     fig = topic_model.visualize_heatmap()
-    fig.write_image("./images/bt_topic_similarity_heatmap.png")
+    fig.write_image(f"./images/bt_topic_similarity_heatmap_{model}.png")
     fig = topic_model.visualize_term_rank()
-    fig.write_image("./images/bt_term_score_decline.png")
+    fig.write_image(f"./images/bt_term_score_decline_{model}.png")
 
     topic_distr, _ = topic_model.approximate_distribution(sequences_list)
     # Elegir el doc que uno quiera y muestra la distribucion de prob
     fig = topic_model.visualize_distribution(topic_distr[1])
-    fig.write_image("./images/bt_topic_dist.png")
+    fig.write_image(f"./images/bt_topic_dist_{model}.png")
     return
 
-def print_model_info(topic_model, sequences_list):
+def print_model_info(topic_model, sequences_list, model):
+    print("model:"+model)
     print("Topics discovered:")
     print(topic_model.get_topic_info())
     print("-----------------------------------------")
