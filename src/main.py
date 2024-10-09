@@ -8,8 +8,8 @@ from models.topics_lda import *
 def main():
 
     params = {
-        'new_reviews': 0,  # 0 for old reviews, 1 new reviews
-        'product_review_count': 10,
+        'new_reviews': 1,  # 0 for old reviews, 1 new reviews
+        'product_review_count': 40,
         # delete?
         'nan': True, 
         'emojis': True,

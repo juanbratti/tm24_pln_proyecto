@@ -38,6 +38,10 @@ def load_and_preprocess_data(params):
         # extraction and cleaning the reviews
         reviews_raw = dataset[dataset['productId'] == product_id]['reviewText']
 
+    else:
+        # first column only
+        reviews_raw = dataset.iloc[:, 0]
+
     params_clean_review = {
         'nan': params['nan'],
         'emojis': params['emojis'],
@@ -53,9 +57,7 @@ def load_and_preprocess_data(params):
         'numbers': params['numbers'],
         'most_frequent': params['most_frequent']
     }
-
-    # first column only
-    reviews_raw = dataset.iloc[:, 0]
+    
     reviews_cleaned = clean_reviews(reviews_raw, params_clean_review)
 
     # save the file to a csv
