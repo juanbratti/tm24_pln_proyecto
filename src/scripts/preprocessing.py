@@ -20,16 +20,24 @@ def load_and_preprocess_data(params):
         reviews_cleaned (pd.Series): Cleaned reviews for the product with the specified number of reviews
         product_id (str): Product ID
     """
+    new_reviews = params['new_reviews']
 
-    file_path = params['file_path']
-    product_review_count = params['product_review_count']
-
+    if not new_reviews:
+        file_path = '../data/parsed_input_file.csv'
+        product_review_count = params['product_review_count']
+    else:
+        file_path = '../data/parsed_input_file2.csv'
+    
     # load of the dataset
     dataset = pd.read_csv(file_path)
     
-    # retrieve the product with a specific number of reviews
-    # product_id = get_product_with_n_reviews(file_path, product_review_count)
-    
+    if not new_reviews:
+        # retrieve the product with a specific number of reviews
+        product_id = get_product_with_n_reviews(file_path, product_review_count)
+
+        # extraction and cleaning the reviews
+        reviews_raw = dataset[dataset['productId'] == product_id]['reviewText']
+
     params_clean_review = {
         'nan': params['nan'],
         'emojis': params['emojis'],
@@ -46,16 +54,16 @@ def load_and_preprocess_data(params):
         'most_frequent': params['most_frequent']
     }
 
-    # extraction and cleaning the reviews
-    # reviews_raw = dataset[dataset['productId'] == product_id]['reviewText']
-
     # first column only
     reviews_raw = dataset.iloc[:, 0]
     reviews_cleaned = clean_reviews(reviews_raw, params_clean_review)
 
     # save the file to a csv
-    reviews_raw.to_csv(f'../data/processed/product_processed.csv', index=False)
-    
+    if not new_reviews:
+        reviews_raw.to_csv(f'../data/processed/product_{product_id}_processed.csv', index=False)
+    else: 
+        reviews_raw.to_csv(f'../data/processed/new_reviews_processed.csv', index=False)
+
     return dataset, reviews_cleaned
 
 def tokenize_reviews(reviews_cleaned, tokens, stopwords, lemmatization):

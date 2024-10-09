@@ -7,14 +7,9 @@ from models.topics_lda import *
 
 def main():
 
-    # fp to parsed input file
-    processed_file_path = '../data/parsed_input_file2.csv'
-
-    # preprocessing of reviews
-
     params = {
-        'file_path': processed_file_path,
-        'product_review_count': 25,
+        'new_reviews': 0,  # 0 for old reviews, 1 new reviews
+        'product_review_count': 10,
         # delete?
         'nan': True, 
         'emojis': True,
@@ -31,7 +26,7 @@ def main():
         'most_frequent': 0
     }
 
-    dataset, reviews_cleaned = load_and_preprocess_data(params)
+    raw_dataset, reviews_cleaned = load_and_preprocess_data(params)
 
     tokens = 5
     # 0 to tokenize in sentences

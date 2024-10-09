@@ -22,7 +22,7 @@ def parse_reviews_txt_to_csv(input_file):
                 reviews.append({'reviewText': review_text, 'label': label})
 
     # write the collected data to a csv file
-    output_file = '../data/parsed_input_file2.csv'
+    output_file = 'parsed_input_file2.csv'
     with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['reviewText', 'label']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)  # DictWriter is used to write dictionaries to CSV
@@ -34,4 +34,4 @@ def parse_reviews_txt_to_csv(input_file):
     print(f"CSV file '{output_file}' has been created.")
     return output_file
 
-parse_reviews_txt_to_csv('amazon_cells_labelled.txt')
+parse_reviews_txt_to_csv('raw/amazon_cells_labelled.txt')
