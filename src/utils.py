@@ -126,6 +126,7 @@ def tokenize_reviews_to_sequences(reviews, sequence_length):
     for review in reviews:
         doc = nlp(review)
         tokens = [token.text for token in doc if not token.is_punct and not token.is_space]
+
         for i in range(len(tokens)):
             sequence = ' '.join(tokens[i:i + sequence_length])
             sequences.append(sequence)
