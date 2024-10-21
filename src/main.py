@@ -7,13 +7,8 @@ from models.topics_lda import *
 
 def main():
 
-    # fp to parsed input file
-    processed_file_path = '../data/parsed_input_file.csv'
-
-    # preprocessing of reviews
-
     params = {
-        'file_path': processed_file_path,
+        'new_reviews': 1,  # 0 for old reviews, 1 new reviews
         'product_review_count': 40,
         # delete?
         'nan': True, 
@@ -31,7 +26,7 @@ def main():
         'most_frequent': 0
     }
 
-    dataset, reviews_cleaned, product_id = load_and_preprocess_data(params)
+    raw_dataset, reviews_cleaned = load_and_preprocess_data(params)
 
     tokens = 5
     # 0 to tokenize in sentences
@@ -49,8 +44,8 @@ def main():
     ]
     # Select model
     ######################BERTOPIC############################
-    # model = "all-MiniLM-L6-v2"
-    model = "umap"
+    model = "all-MiniLM-L6-v2"
+    #model = "umap"
     reduced_topics = 10
     # application of BERTopic  modeling
     topic_model = apply_bertopic(sequences_list, seed_topic_list, model, reduced_topics)
@@ -64,7 +59,7 @@ def main():
 
 
     # ####################KMEANS################################
-    # n_clusters = 10
+    # n_clusters = 5
     # important_words = 5
     # topic_model, topics = apply_kmeans(sequences_list, n_clusters)
     
